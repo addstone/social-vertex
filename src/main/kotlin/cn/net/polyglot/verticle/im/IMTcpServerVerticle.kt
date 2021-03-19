@@ -32,8 +32,8 @@ import io.vertx.core.json.JsonObject
 import io.vertx.core.net.NetServerOptions
 import io.vertx.core.net.NetSocket
 import io.vertx.core.parsetools.RecordParser
-import io.vertx.kotlin.core.eventbus.requestAwait
 import io.vertx.kotlin.coroutines.CoroutineVerticle
+import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.launch
 
 class IMTcpServerVerticle : CoroutineVerticle() {
@@ -56,13 +56,12 @@ class IMTcpServerVerticle : CoroutineVerticle() {
       //因为是bimap，不能重复存入null，会抛异常，所以临时先放一个字符串，等用户登陆之后便会替换该字符串，以用户名取代
       socketMap[socket] = socket.writeHandlerID()
 
-      socket.handler {
-        RecordParser
-          .newDelimited(END) { buffer -> launch { processJsonString(buffer.toString(), socket) } }
-          .maxRecordSize(10240)//max is 10KB
-          .exceptionHandler { socket.close() }
-          .handle(it)
-      }
+      val parser = RecordParser
+        .newDelimited(END) { launch { processJsonString(it.toString(), socket) } }
+        .maxRecordSize(10240)//max is 10KB
+        .exceptionHandler { socket.close() }
+
+      socket.handler(parser)
 
       socket.closeHandler {
         socketMap.remove(socket)
@@ -93,7 +92,7 @@ class IMTcpServerVerticle : CoroutineVerticle() {
           val id = json.getString(ID)
           val password = json.getString(PASSWORD)
           val requestJson = JsonObject().put(TYPE, USER).put(SUBTYPE, VERIFY).put(ID, id).put(PASSWORD, password)
-          val responseJson = vertx.eventBus().requestAwait<JsonObject>(UserVerticle::class.java.name, requestJson).body()
+          val responseJson = vertx.eventBus().request<JsonObject>(UserVerticle::class.java.name, requestJson).await().body()
           if(responseJson.getBoolean(VERIFY)){
             if (socketMap.containsValue(id) && socketMap.inverse()[id] != socket) {
               socketMap.inverse()[id]?.close()//表示之前连接的socket跟当前socket不是一个，设置单点登录

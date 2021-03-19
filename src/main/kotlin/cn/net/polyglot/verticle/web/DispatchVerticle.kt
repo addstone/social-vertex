@@ -24,6 +24,8 @@ SOFTWARE.
 
 package cn.net.polyglot.verticle.web
 
+//import io.vertx.ext.web.Cookie
+//import io.vertx.ext.web.handler.CookieHandler
 import cn.net.polyglot.config.*
 import cn.net.polyglot.module.getMimeTypeWithoutCharset
 import com.codahale.fastuuid.UUIDGenerator
@@ -33,18 +35,15 @@ import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.json.JsonObject
 import io.vertx.core.net.PemKeyCertOptions
-//import io.vertx.ext.web.Cookie
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.RoutingContext
 import io.vertx.ext.web.handler.BodyHandler
-//import io.vertx.ext.web.handler.CookieHandler
 import io.vertx.ext.web.handler.CorsHandler
+import io.vertx.ext.web.handler.ErrorHandler
 import io.vertx.ext.web.handler.StaticHandler
 import io.vertx.ext.web.templ.thymeleaf.ThymeleafTemplateEngine
-import io.vertx.kotlin.core.eventbus.requestAwait
-import io.vertx.kotlin.core.http.sendFileAwait
 import io.vertx.kotlin.coroutines.CoroutineVerticle
-import io.vertx.kotlin.ext.web.common.template.renderAwait
+import io.vertx.kotlin.coroutines.await
 import kotlinx.coroutines.launch
 import java.security.SecureRandom
 import kotlin.random.Random
@@ -206,7 +205,7 @@ abstract class DispatchVerticle : CoroutineVerticle() {
         val address = getVerticleAddressByPath(httpMethod, path)
 
         val responseJson = if (address != "") {
-          vertx.eventBus().requestAwait<JsonObject>(address, requestJson).body()
+          vertx.eventBus().request<JsonObject>(address, requestJson).await().body()
         } else {
           JsonObject()
         }
@@ -220,13 +219,15 @@ abstract class DispatchVerticle : CoroutineVerticle() {
               else
                 path.substringBeforeLast("/", "") + "/" + templatePath
 //            val templateFileName = "webroot${if(templatePath.startsWith("/")) templatePath else "/$templatePath"}"
-            val buffer = engine.renderAwait(responseJson.getJsonObject(VALUES) ?: JsonObject(), templateFileName)//?:JsonObject()
+            val buffer = engine.render(responseJson.getJsonObject(VALUES) ?: JsonObject(), templateFileName).await()//?:JsonObject()
+            routingContext.response().headers()["Content-Type"] = "text/html"
             routingContext.response().end(buffer)
           }
           responseJson.containsKey(FILE_PATH) -> {
             try {
-              routingContext.response().sendFileAwait(responseJson.getString(FILE_PATH))
+              routingContext.response().sendFile(responseJson.getString(FILE_PATH)).await()
             } catch (throwable: Throwable) {
+              routingContext.response().headers()["Content-Type"] = "image/jpg"
               routingContext.reroute(HttpMethod.GET, "/img/image_not_available.jpg")
             }
           }
@@ -235,7 +236,10 @@ abstract class DispatchVerticle : CoroutineVerticle() {
             routingContext.response().end(responseJson.getString(RESPONSE_JSON))
           }
           responseJson.containsKey(EMPTY_RESPONSE) -> routingContext.response().end()
-          else -> routingContext.reroute(HttpMethod.GET, "/error.html")
+          else -> {
+            routingContext.response().headers()["Content-Type"] = "text/html"
+            routingContext.reroute(HttpMethod.GET, "/error.html")
+          }
         }
       }
 
@@ -245,6 +249,8 @@ abstract class DispatchVerticle : CoroutineVerticle() {
     router.get("/*").handler(routingHandler)
     router.post("/*").handler(routingHandler)
     router.put("/*").handler(routingHandler)
+
+    router.route().failureHandler(ErrorHandler.create(vertx))
     //web end
 
     val httpServer = vertx.createHttpServer()

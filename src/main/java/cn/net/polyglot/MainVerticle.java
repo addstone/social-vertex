@@ -11,19 +11,19 @@ import java.io.File;
 import java.nio.file.Paths;
 
 public class MainVerticle extends AbstractVerticle {
-  public void start() {
+  public void start(){
 
     var currentPath = Paths.get("").toAbsolutePath().toString();
 
     System.out.println("Current Path: "+currentPath);
 
     JsonObject config = new JsonObject()
-      .put("version",0.6)
+      .put("version",0.7)
       .put("dir", currentPath + File.separator + "social-vertex")
       .put("jar-dir", currentPath)
       .put("host", "localhost")
       .put("tcp-port", 7373)
-      .put("http-port",80)
+      .put("http-port", 80)
       .put("https-port",443);
 
     ConfigStoreOptions fileStore = new ConfigStoreOptions()
@@ -59,6 +59,7 @@ public class MainVerticle extends AbstractVerticle {
         vertx.deployVerticle("kt:cn.net.polyglot.verticle.im.IMTcpServerVerticle", option);
         vertx.deployVerticle("kt:cn.net.polyglot.verticle.im.IMServletVerticle", option);
         vertx.deployVerticle("kt:cn.net.polyglot.verticle.WebServerVerticle", option);
+        vertx.deployVerticle("kt:cn.net.polyglot.verticle.community.DefaultVerticle", option);
         vertx.deployVerticle("kt:cn.net.polyglot.verticle.community.LoginVerticle", option);
         vertx.deployVerticle("kt:cn.net.polyglot.verticle.community.CommunityVerticle", option);
 

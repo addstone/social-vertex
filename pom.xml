@@ -6,23 +6,38 @@
 
   <groupId>cn.net.polyglot</groupId>
   <artifactId>social-vertex</artifactId>
-  <version>0.6</version>
+  <version>0.7</version>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>14</maven.compiler.source>
-    <maven.compiler.target>14</maven.compiler.target>
+    <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
 
-    <kotlin.version>1.3.61</kotlin.version>
+    <kotlin.version>1.4.10</kotlin.version>
     <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     <kotlin.compiler.jvmTarget>1.8</kotlin.compiler.jvmTarget>
-    <vertx.version>4.0.0-milestone5</vertx.version>
+    <vertx.version>4.0.2</vertx.version>
+    <es4x.version>0.14.0</es4x.version>
     <vertx.verticle>cn.net.polyglot.MainVerticle</vertx.verticle>
-<!--    <vertx.verticle>cn/net/polyglot/main_verticle.groovy</vertx.verticle>-->
 <!--    <vertx.verticle>cn/net/polyglot/main-verticle.js</vertx.verticle>-->
   </properties>
 
   <dependencies>
+    <!-- es4x dependencies start -->
+<!--    <dependency>-->
+<!--      <groupId>io.reactiverse</groupId>-->
+<!--      <artifactId>es4x-vertx-stack</artifactId>-->
+<!--      <version>${es4x.version}</version>-->
+<!--    </dependency>-->
+<!--    <dependency>-->
+<!--      <groupId>io.reactiverse</groupId>-->
+<!--      <artifactId>es4x-pm</artifactId>-->
+<!--      <version>${es4x.version}</version>-->
+<!--      <scope>provided</scope>-->
+<!--    </dependency>-->
+    <!-- es4x dependencies end -->
+
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-core</artifactId>
@@ -35,10 +50,6 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-config</artifactId>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>io.vertx</groupId>-->
-<!--      <artifactId>vertx-lang-groovy</artifactId>-->
-<!--    </dependency>-->
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-lang-kotlin</artifactId>
@@ -55,21 +66,10 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-web-templ-thymeleaf</artifactId>
     </dependency>
-<!--    <dependency>-->
-<!--      <groupId>io.reactiverse</groupId>-->
-<!--      <artifactId>es4x-vertx-stack</artifactId>-->
-<!--      <version>0.11.0</version>-->
-<!--    </dependency>-->
-<!--    <dependency>-->
-<!--      <groupId>com.fasterxml.jackson.core</groupId>-->
-<!--      <artifactId>jackson-databind</artifactId>-->
-<!--      <version>2.9.10.3</version>-->
-<!--    </dependency>-->
-    <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>29.0-jre</version>
+      <version>30.0-jre</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -90,7 +90,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -121,16 +121,13 @@
       <resource>
         <directory>src/main/javascript</directory>
       </resource>
-<!--      <resource>-->
-<!--        <directory>src/main/groovy</directory>-->
-<!--      </resource>-->
     </resources>
 
     <plugins>
       <plugin>
         <groupId>io.reactiverse</groupId>
         <artifactId>vertx-maven-plugin</artifactId>
-        <version>1.0.22</version>
+        <version>1.0.23</version>
         <executions>
           <execution>
             <id>vmp</id>
@@ -142,6 +139,7 @@
         </executions>
         <configuration>
           <redeploy>true</redeploy>
+          <!--<debugSuspend>true</debugSuspend>-->
         </configuration>
       </plugin>
 
@@ -180,6 +178,29 @@
           </execution>
         </executions>
       </plugin>
+<!--      <plugin>-->
+<!--        <groupId>org.codehaus.mojo</groupId>-->
+<!--        <artifactId>exec-maven-plugin</artifactId>-->
+<!--        <version>3.0.0</version>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>generate-asm</id>-->
+<!--            <phase>compile</phase>-->
+<!--            <goals>-->
+<!--              <goal>java</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--        <configuration>-->
+<!--          <mainClass>io.reactiverse.es4x.cli.VertxPatch</mainClass>-->
+<!--          <arguments>-->
+<!--            <argument>${vertx.version}</argument>-->
+<!--            <argument>${project.build.outputDirectory}</argument>-->
+<!--          </arguments>-->
+<!--          <classpathScope>compile</classpathScope>-->
+<!--        </configuration>-->
+<!--      </plugin>-->
     </plugins>
   </build>
+
 </project>
